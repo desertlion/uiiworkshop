@@ -2,6 +2,7 @@
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+use App\Article as Article;
 
 use Illuminate\Http\Request;
 
@@ -14,7 +15,8 @@ class ArticleController extends Controller {
 	 */
 	public function index()
 	{
-		//
+        $articles = Article::all();
+		return view('articles.index', ['articles'=>$articles]);
 	}
 
 	/**
@@ -24,7 +26,7 @@ class ArticleController extends Controller {
 	 */
 	public function create()
 	{
-		//
+		return view('articles.create');
 	}
 
 	/**
@@ -34,7 +36,28 @@ class ArticleController extends Controller {
 	 */
 	public function store()
 	{
-		//
+		// Baca seluruh input
+        // Validasi
+        $rules = [
+            'title' => 'required',
+            'description' => 'required'
+        ];
+        // untuk validasi, format parameter, input dan rule
+        $validator = \Validator::make(\Request::all(), $rules);
+        if($validator->fails())
+            return Redirect()
+                ->back()
+                ->withInput()
+                ->withError($validator);
+
+        // Proses
+        $data = new Article();
+        $data->title = \Request::input('title');
+        $data->description = \Request::input('description');
+        $data->published_at = Date('Y-m-d h:i:s');
+        $data->save();
+
+        return Redirect('articles');
 	}
 
 	/**
@@ -45,7 +68,8 @@ class ArticleController extends Controller {
 	 */
 	public function show($id)
 	{
-		//
+        $article = Article::find($id);
+		return view('articles.show', ['article'=>$article]);
 	}
 
 	/**
@@ -56,7 +80,7 @@ class ArticleController extends Controller {
 	 */
 	public function edit($id)
 	{
-		//
+		return view('articles.edit', ['article'=>Article::find($id)]);
 	}
 
 	/**
@@ -67,9 +91,29 @@ class ArticleController extends Controller {
 	 */
 	public function update($id)
 	{
-		//
-	}
+		// Baca seluruh input
+        // Validasi
+        $rules = [
+            'title' => 'required',
+            'description' => 'required'
+        ];
+        // untuk validasi, format parameter, input dan rule
+        $validator = \Validator::make(\Request::all(), $rules);
 
+        if($validator->fails())
+            return Redirect()
+                ->back()
+                ->withInput()
+                ->withErrors($validator);
+
+        // Proses
+        $data = Article::find($id);
+        $data->title = \Request::input('title');
+        $data->description = \Request::input('description');
+        $data->save();
+
+        return redirect()->route('articles.index');
+	}
 	/**
 	 * Remove the specified resource from storage.
 	 *
@@ -78,7 +122,9 @@ class ArticleController extends Controller {
 	 */
 	public function destroy($id)
 	{
-		//
+		$data = Article::find($id);
+        $data->delete();
+        return redirect()->route('articles.index');
 	}
 
 }
